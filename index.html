@@ -3,38 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElectroCalc Pro</title>
+    <title>ElectroCalc Pro - Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <style>
         .resistor-body { background: linear-gradient(to bottom, #d1b48c 0%, #e6d2b5 50%, #d1b48c 100%); }
         .band { width: 12px; height: 110%; box-shadow: 1px 0 2px rgba(0,0,0,0.3); }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="bg-slate-900 text-white pb-10 font-sans">
-    <header class="p-6 text-center bg-blue-600 shadow-lg mb-6">
-        <h1 class="text-2xl font-bold">ELECTRO-CALC PRO</h1>
+<body class="bg-slate-900 text-white pb-10">
+    <header class="p-6 text-center bg-blue-700 shadow-xl mb-6">
+        <h1 class="text-2xl font-black tracking-tighter">ELECTRO-CALC PRO</h1>
+        <p class="text-xs text-blue-200">Calculadora Avanzada: V • I • R • P</p>
     </header>
-    <main class="p-4 max-w-4xl mx-auto grid gap-6">
-        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-            <h2 class="text-blue-400 font-bold mb-4 italic text-lg">⚡ LEY DE OHM</h2>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <input id="v_input" type="number" placeholder="Voltaje (V)" class="bg-slate-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                <input id="r_input" type="number" placeholder="Resist. (Ω)" class="bg-slate-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+
+    <main class="p-4 max-w-lg mx-auto space-y-6">
+        
+        <!-- CALCULADORA MAESTRA -->
+        <section class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl">
+            <h2 class="text-blue-400 font-bold mb-4 flex items-center italic">⚡ CALCULADORA TOTAL</h2>
+            <p class="text-slate-400 text-[10px] mb-4 uppercase tracking-widest">Introduce 2 valores para calcular el resto:</p>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500">Tensión (V)</label>
+                    <input id="v" type="number" placeholder="Voltios" class="w-full bg-slate-700 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500">Intensidad (I)</label>
+                    <input id="i" type="number" placeholder="Amperios" class="w-full bg-slate-700 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500">Resistencia (R)</label>
+                    <input id="r" type="number" placeholder="Ohmios" class="w-full bg-slate-700 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500">Potencia (P)</label>
+                    <input id="p" type="number" placeholder="Watts" class="w-full bg-slate-700 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
             </div>
-            <button onclick="calcularOhm()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition">CALCULAR (I)</button>
-            <div id="ohm_res" class="mt-4 text-center text-2xl text-yellow-400 font-mono">---</div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="calcularTodo()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-black transition-all transform active:scale-95 shadow-lg">CALCULAR</button>
+                <button onclick="limpiar()" class="px-6 bg-slate-700 hover:bg-slate-600 rounded-2xl transition">🗑️</button>
+            </div>
         </section>
+
+        <!-- RESULTADOS DETALLADOS -->
+        <section id="resultados_box" class="hidden animate-bounce-in">
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-slate-800 p-4 rounded-2xl border border-blue-500/30">
+                    <p class="text-[10px] text-slate-500 uppercase">Voltaje</p>
+                    <p id="res_v" class="text-xl font-mono text-blue-400 font-bold">--</p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-2xl border border-blue-500/30">
+                    <p class="text-[10px] text-slate-500 uppercase">Corriente</p>
+                    <p id="res_i" class="text-xl font-mono text-green-400 font-bold">--</p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-2xl border border-blue-500/30">
+                    <p class="text-[10px] text-slate-500 uppercase">Resistencia</p>
+                    <p id="res_r" class="text-xl font-mono text-orange-400 font-bold">--</p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-2xl border border-blue-500/30">
+                    <p class="text-[10px] text-slate-500 uppercase">Potencia</p>
+                    <p id="res_p" class="text-xl font-mono text-yellow-400 font-bold">--</p>
+                </div>
+            </div>
+        </section>
+
     </main>
+
     <script>
-        function calcularOhm(){
-            const v = document.getElementById('v_input').value;
-            const r = document.getElementById('r_input').value;
-            if(v && r && r > 0) {
-                document.getElementById('ohm_res').innerText = (v/r).toFixed(3) + " A";
+        function calcularTodo() {
+            let v = parseFloat(document.getElementById('v').value);
+            let i = parseFloat(document.getElementById('i').value);
+            let r = parseFloat(document.getElementById('r').value);
+            let p = parseFloat(document.getElementById('p').value);
+
+            // Lógica de cálculo basada en qué valores están presentes
+            if (!isNaN(v) && !isNaN(i)) {
+                r = v / i;
+                p = v * i;
+            } else if (!isNaN(v) && !isNaN(r)) {
+                i = v / r;
+                p = (v * v) / r;
+            } else if (!isNaN(v) && !isNaN(p)) {
+                i = p / v;
+                r = (v * v) / p;
+            } else if (!isNaN(i) && !isNaN(r)) {
+                v = i * r;
+                p = (i * i) * r;
+            } else if (!isNaN(i) && !isNaN(p)) {
+                v = p / i;
+                r = p / (i * i);
+            } else if (!isNaN(r) && !isNaN(p)) {
+                v = Math.sqrt(p * r);
+                i = Math.sqrt(p / r);
             } else {
-                document.getElementById('ohm_res').innerText = "Error";
+                alert("Por favor, introduce al menos dos valores.");
+                return;
             }
+
+            // Mostrar resultados
+            document.getElementById('res_v').innerText = v.toFixed(2) + " V";
+            document.getElementById('res_i').innerText = i.toFixed(3) + " A";
+            document.getElementById('res_r').innerText = r.toFixed(2) + " Ω";
+            document.getElementById('res_p').innerText = p.toFixed(2) + " W";
+            document.getElementById('resultados_box').classList.remove('hidden');
+        }
+
+        function limpiar() {
+            document.querySelectorAll('input').forEach(input => input.value = '');
+            document.getElementById('resultados_box').classList.add('hidden');
         }
     </script>
 </body>
