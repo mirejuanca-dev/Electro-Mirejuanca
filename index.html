@@ -6,28 +6,112 @@
     <title>ElectroCalc Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <style>
+        .resistor-body {
+            background: linear-gradient(to bottom, #d1b48c 0%, #e6d2b5 50%, #d1b48c 100%);
+        }
+        .band { width: 12px; height: 110%; box-shadow: 1px 0 2px rgba(0,0,0,0.3); }
+    </style>
 </head>
-<body class="bg-slate-900 text-white font-sans">
+<body class="bg-slate-900 text-white font-sans pb-10">
+
     <header class="p-6 text-center bg-blue-600 shadow-lg mb-6">
-        <h1 class="text-2xl font-bold">ELECTRO-CALC PRO</h1>
+        <h1 class="text-2xl font-bold tracking-tighter text-white">ELECTRO-CALC PRO</h1>
+        <p class="text-blue-100 text-xs">Ingeniería en tu bolsillo</p>
     </header>
-    <main class="p-4 max-w-4xl mx-auto space-y-6">
+
+    <main class="p-4 max-w-4xl mx-auto grid gap-6">
+        
         <!-- LEY DE OHM -->
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-            <h2 class="text-blue-400 font-bold mb-4">⚡ LEY DE OHM</h2>
+        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+            <h2 class="text-blue-400 font-bold mb-4 flex items-center italic underline">⚡ LEY DE OHM</h2>
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <input id="v" type="number" placeholder="Voltaje (V)" class="bg-slate-700 p-3 rounded-lg outline-none w-full">
-                <input id="r" type="number" placeholder="Resist. (Ω)" class="bg-slate-700 p-3 rounded-lg outline-none w-full">
+                <div>
+                    <label class="text-[10px] uppercase text-slate-400">Voltaje (V)</label>
+                    <input id="v_input" type="number" placeholder="Ej: 12" class="w-full bg-slate-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-white">
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase text-slate-400">Resistencia (Ω)</label>
+                    <input id="r_input" type="number" placeholder="Ej: 220" class="w-full bg-slate-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-white">
+                </div>
             </div>
-            <button onclick="calc()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">CALCULAR CORRIENTE</button>
-            <div id="res" class="mt-4 text-center text-xl text-yellow-400 font-mono">---</div>
-        </div>
+            <button onclick="calcularOhm()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition text-white">CALCULAR CORRIENTE (I)</button>
+            <div id="ohm_res" class="mt-4 text-center text-2xl font-mono text-yellow-400 font-bold">---</div>
+        </section>
+
+        <!-- CÓDIGO DE COLORES -->
+        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+            <h2 class="text-orange-400 font-bold mb-4 italic underline">🎨 CÓDIGO DE COLORES</h2>
+            
+            <div class="flex justify-center items-center py-8 bg-slate-900 rounded-xl mb-6 border border-slate-700">
+                <div class="w-10 h-1 bg-gray-500"></div>
+                <div class="resistor-body w-48 h-14 rounded-full flex justify-around items-center px-4 overflow-hidden shadow-inner">
+                    <div id="band1" class="band bg-orange-700"></div>
+                    <div id="band2" class="band bg-black"></div>
+                    <div id="band3" class="band bg-red-600"></div>
+                    <div id="band4" class="band bg-yellow-600 ml-4"></div>
+                </div>
+                <div class="w-10 h-1 bg-gray-500"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <select id="s1" onchange="actualizarRes()" class="bg-slate-700 p-3 rounded-lg text-white">
+                    <option value="0">Negro (0)</option><option value="1" selected>Marrón (1)</option>
+                    <option value="2">Rojo (2)</option><option value="3">Naranja (3)</option>
+                    <option value="4">Amarillo (4)</option><option value="5">Verde (5)</option>
+                    <option value="6">Azul (6)</option><option value="7">Violeta (7)</option>
+                </select>
+                <select id="s2" onchange="actualizarRes()" class="bg-slate-700 p-3 rounded-lg text-white">
+                    <option value="0" selected>Negro (0)</option><option value="1">Marrón (1)</option>
+                    <option value="2">Rojo (2)</option><option value="3">Naranja (3)</option>
+                </select>
+                <select id="s3" onchange="actualizarRes()" class="bg-slate-700 p-3 rounded-lg text-white">
+                    <option value="1">x1</option><option value="10">x10</option>
+                    <option value="100" selected>x100</option><option value="1000">x1k</option>
+                    <option value="10000">x10k</option><option value="1000000">x1M</option>
+                </select>
+                <select id="s4" onchange="actualizarRes()" class="bg-slate-700 p-3 rounded-lg text-white">
+                    <option value="5">±5% (Oro)</option><option value="10">±10% (Plata)</option>
+                </select>
+            </div>
+            
+            <div id="res_final" class="text-3xl font-bold text-center mt-6 text-white uppercase tracking-wider">1000 Ω ±5%</div>
+        </section>
+
     </main>
+
     <script>
-        function calc() {
-            const v = document.getElementById('v').value;
-            const r = document.getElementById('r').value;
-            if(v && r) document.getElementById('res').innerText = (v/r).toFixed(3) + " Amperios (A)";
+        const colores = ["black", "brown", "red", "orange", "yellow", "green", "blue", "violet", "gray", "white"];
+        const coloresTole = { "5": "#d4af37", "10": "#c0c0c0" };
+
+        function calcularOhm() {
+            const v = document.getElementById('v_input').value;
+            const r = document.getElementById('r_input').value;
+            if(v && r && r > 0) {
+                const res = (v/r).toFixed(4);
+                document.getElementById('ohm_res').innerText = res + " A";
+            } else {
+                document.getElementById('ohm_res').innerText = "ERROR";
+            }
+        }
+
+        function actualizarRes() {
+            const b1 = document.getElementById('s1').value;
+            const b2 = document.getElementById('s2').value;
+            const mult = document.getElementById('s3').value;
+            const tole = document.getElementById('s4').value;
+
+            document.getElementById('band1').style.backgroundColor = colores[b1];
+            document.getElementById('band2').style.backgroundColor = colores[b2];
+            document.getElementById('band3').style.backgroundColor = colores[Math.log10(mult)];
+            document.getElementById('band4').style.backgroundColor = coloresTole[tole];
+
+            let valor = (parseInt(b1) * 10 + parseInt(b2)) * parseFloat(mult);
+            let display = valor >= 1000000 ? (valor/1000000).toFixed(1) + " M" : 
+                          valor >= 1000 ? (valor/1000).toFixed(1) + " k" : valor;
+            
+            document.getElementById('res_final').innerText = `${display} Ω ±${tole}%`;
         }
     </script>
 </body>
