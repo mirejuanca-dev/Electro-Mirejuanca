@@ -1,12 +1,15 @@
 {
-    "negro": {"valor": 0, "hex": "#000000"},
-    "marron": {"valor": 1, "hex": "#8B4513"},
-    "rojo": {"valor": 2, "hex": "#FF0000"},
-    "naranja": {"valor": 3, "hex": "#FFA500"},
-    "amarillo": {"valor": 4, "hex": "#FFFF00"},
-    "verde": {"valor": 5, "hex": "#008000"},
-    "azul": {"valor": 6, "hex": "#0000FF"},
-    "violeta": {"valor": 7, "hex": "#EE82EE"},
-    "gris": {"valor": 8, "hex": "#808080"},
-    "blanco": {"valor": 9, "hex": "#FFFFFF"}
+  "short_name": "ElectroCalc",
+  "name": "ElectroCalc Pro: Ingeniería y Diseño",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/606/606795.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#0f172a"
 }
