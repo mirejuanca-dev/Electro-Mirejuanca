@@ -1,59 +1,12 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Electrónica Pro</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1, h2 { color: #2c3e50; text-align: center; }
-        .section { border-bottom: 1px solid #eee; padding: 20px 0; }
-        input { width: 80px; padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #2980b9; }
-        .result { margin-top: 15px; font-weight: bold; color: #27ae60; }
-        .bandas-display { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-        .banda { width: 30px; height: 60px; border-radius: 4px; border: 1px solid #000; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Toolbox Electrónica</h1>
-
-    <!-- Sección Ley de Ohm -->
-    <div class="section">
-        <h2>Ley de Ohm y Potencia</h2>
-        <p><small>Rellena 2 campos para calcular el resto</small></p>
-        V: <input type="number" id="voltaje" placeholder="Voltios"> 
-        I: <input type="number" id="corriente" placeholder="Amperios"><br>
-        R: <input type="number" id="resistencia" placeholder="Ohmios"> 
-        P: <input type="number" id="potencia" placeholder="Watios"><br><br>
-        <button onclick="calcularOhm()">Calcular</button>
-        <div id="resOhm" class="result"></div>
-    </div>
-
-    <!-- Sección Colores a Valor -->
-    <div class="section">
-        <h2>Colores a Valor (4 Bandas)</h2>
-        <input type="text" id="b1" placeholder="Color 1">
-        <input type="text" id="b2" placeholder="Color 2">
-        <input type="text" id="b3" placeholder="Multiplicador">
-        <button onclick="obtenerValor()">Convertir a Ω</button>
-        <div id="resVal" class="result"></div>
-    </div>
-
-    <!-- Sección Valor a Colores -->
-    <div class="section">
-        <h2>Valor a Colores</h2>
-        <input type="number" id="valOhm" placeholder="Ej: 4700"> Ω
-        <button onclick="obtenerColores()">Ver Colores</button>
-        <div id="resCol" class="result"></div>
-        <div id="visualBandas" class="bandas-display"></div>
-    </div>
+<!-- Icono Visual para el Header -->
+<div class="flex justify-center mt-4">
+    <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Círculo de fondo -->
+        <circle cx="50" cy="50" r="45" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+        <!-- Rayo Estilizado -->
+        <path d="M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 Z" fill="#facc15" />
+        <!-- Símbolos de código < > -->
+        <path d="M25 40 L15 50 L25 60" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+        <path d="M75 40 L85 50 L75 60" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+    </svg>
 </div>
-
-<script src="script.js"></script>
-</body>
-</html>
