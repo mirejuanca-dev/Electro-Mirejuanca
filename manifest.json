@@ -1,9 +1,15 @@
 {
   "short_name": "ElectroCalc",
   "name": "ElectroCalc Pro",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/606/606795.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
   "start_url": "index.html",
-  "display": "standalone",
-  "theme_color": "#2563eb",
   "background_color": "#0f172a",
-  "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/606/606795.png", "sizes": "512x512", "type": "image/png"}]
+  "display": "standalone",
+  "theme_color": "#2563eb"
 }
