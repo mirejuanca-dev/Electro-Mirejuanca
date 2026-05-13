@@ -3,116 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElectroCalc Pro</title>
+    <title>Mirejuanca - Dashboard Electrónico</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .resistor-body { background: linear-gradient(to bottom, #d1b48c 0%, #e6d2b5 50%, #d1b48c 100%); }
-        .band { width: 12px; height: 110%; box-shadow: 1px 0 2px rgba(0,0,0,0.3); transition: all 0.3s; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .resistor-body {
+            background: #d1b894;
+            height: 40px;
+            width: 150px;
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 15px;
+            margin: 20px auto;
+        }
+        .band {
+            width: 10px;
+            height: 100%;
+        }
+        .hidden-section { display: none; }
     </style>
 </head>
-<body class="bg-slate-900 text-white pb-10">
+<body class="bg-slate-100 min-h-screen text-slate-800">
 
-    <header class="p-6 text-center bg-blue-600 shadow-lg mb-6">
-        <h1 class="text-2xl font-bold">ELECTRO-CALC PRO</h1>
+    <header class="bg-indigo-700 text-white p-6 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-bold tracking-tight">Mirejuanca <span class="text-indigo-200 font-light text-xl">Dashboard</span></h1>
+            <nav class="hidden md:block">
+                <ul class="flex space-x-6">
+                    <li><a href="#" onclick="showSection('home')" class="hover:text-indigo-200 transition">Inicio</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
-    <main class="p-4 max-w-4xl mx-auto grid gap-6">
+    <main class="container mx-auto p-6">
         
-        <!-- SECCIÓN RESISTENCIAS -->
-        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-            <h2 class="text-orange-400 font-bold mb-4 italic uppercase tracking-wider">🎨 Código de Colores</h2>
-            
-            <!-- Dibujo de la Resistencia -->
-            <div class="flex justify-center items-center py-10 bg-slate-900 rounded-xl mb-6">
-                <div class="w-10 h-1 bg-gray-500"></div>
-                <div class="resistor-body w-48 h-14 rounded-full flex justify-around items-center px-4 overflow-hidden shadow-inner">
-                    <div id="band1" class="band bg-brown-700"></div>
-                    <div id="band2" class="band bg-black"></div>
-                    <div id="band3" class="band bg-red-600"></div>
-                    <div id="band4" class="band bg-yellow-600 ml-4"></div>
+        <!-- Menú Principal -->
+        <div id="home" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div onclick="showSection('ohm')" class="glass-card p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all cursor-pointer border-t-4 border-indigo-500 group">
+                <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                    <i class="fas fa-bolt text-2xl text-indigo-600"></i>
                 </div>
-                <div class="w-10 h-1 bg-gray-500"></div>
+                <h3 class="text-xl font-bold mb-2">Ley de Ohm & Potencia</h3>
+                <p class="text-slate-500">Cálculo de V, I, R y P con 2 datos.</p>
             </div>
 
-            <!-- Selectores de Colores -->
-            <div class="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                    <label class="block text-[10px] text-slate-400 mb-1">BANDA 1</label>
-                    <select id="s1" onchange="actualizarRes()" class="w-full bg-slate-700 p-2 rounded">
-                        <option value="0">Negro</option><option value="1" selected>Marrón</option>
-                        <option value="2">Rojo</option><option value="3">Naranja</option>
-                        <option value="4">Amarillo</option><option value="5">Verde</option>
-                        <option value="6">Azul</option><option value="7">Violeta</option>
-                    </select>
+            <div onclick="showSection('colores-a-valor')" class="glass-card p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all cursor-pointer border-t-4 border-emerald-500 group">
+                <div class="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                    <i class="fas fa-palette text-2xl text-emerald-600"></i>
                 </div>
-                <div>
-                    <label class="block text-[10px] text-slate-400 mb-1">BANDA 2</label>
-                    <select id="s2" onchange="actualizarRes()" class="w-full bg-slate-700 p-2 rounded">
-                        <option value="0" selected>Negro</option><option value="1">Marrón</option>
-                        <option value="2">Rojo</option><option value="3">Naranja</option>
-                        <option value="4">Amarillo</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] text-slate-400 mb-1">MULTIPLICADOR</label>
-                    <select id="s3" onchange="actualizarRes()" class="w-full bg-slate-700 p-2 rounded">
-                        <option value="1">x1 (Negro)</option><option value="10">x10 (Marrón)</option>
-                        <option value="100" selected>x100 (Rojo)</option><option value="1000">x1k (Naranja)</option>
-                        <option value="10000">x10k (Amarillo)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] text-slate-400 mb-1">TOLERANCIA</label>
-                    <select id="s4" onchange="actualizarRes()" class="w-full bg-slate-700 p-2 rounded text-yellow-500">
-                        <option value="5">±5% (Oro)</option><option value="10">±10% (Plata)</option>
-                    </select>
-                </div>
+                <h3 class="text-xl font-bold mb-2">Código a Valor</h3>
+                <p class="text-slate-500">Obtén ohmios a partir de los colores.</p>
             </div>
-            
-            <div id="res_final" class="text-3xl font-bold text-center mt-8 text-white">1000 Ω ±5%</div>
-        </section>
 
-        <!-- SECCIÓN LEY DE OHM -->
-        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-            <h2 class="text-blue-400 font-bold mb-4 italic uppercase">⚡ Ley de Ohm</h2>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <input id="v_input" type="number" placeholder="Voltios (V)" class="bg-slate-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                <input id="r_input" type="number" placeholder="Ohmios (Ω)" class="bg-slate-700 p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+            <div onclick="showSection('valor-a-colores')" class="glass-card p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all cursor-pointer border-t-4 border-orange-500 group">
+                <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                    <i class="fas fa-microchip text-2xl text-orange-600"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Valor a Colores</h3>
+                <p class="text-slate-500">Convierte ohmios a código de colores.</p>
             </div>
-            <button onclick="calcularOhm()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition">CALCULAR CORRIENTE</button>
-            <div id="ohm_res" class="mt-4 text-center text-xl text-yellow-400 font-mono italic">---</div>
-        </section>
+        </div>
+
+        <!-- Sección Ohm -->
+        <div id="ohm" class="hidden-section max-w-2xl mx-auto">
+            <button onclick="showSection('home')" class="mb-4 text-indigo-600 font-semibold hover:underline">Volver</button>
+            <div class="glass-card p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-center">Ley de Ohm y Potencia</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="v_in" class="p-3 border rounded-lg" placeholder="Voltaje (V)">
+                    <input type="number" id="i_in" class="p-3 border rounded-lg" placeholder="Corriente (I)">
+                    <input type="number" id="r_in" class="p-3 border rounded-lg" placeholder="Resistencia (R)">
+                    <input type="number" id="p_in" class="p-3 border rounded-lg" placeholder="Potencia (P)">
+                </div>
+                <button onclick="calcOhm()" class="w-full mt-6 bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition">Calcular</button>
+                <div id="ohm_results" class="mt-8 bg-slate-50 p-4 rounded-xl hidden text-center font-mono text-indigo-800">
+                    <p id="res_text"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Colores a Valor -->
+        <div id="colores-a-valor" class="hidden-section max-w-2xl mx-auto">
+            <button onclick="showSection('home')" class="mb-4 text-emerald-600 font-semibold hover:underline">Volver</button>
+            <div class="glass-card p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-center">Identificador de Resistencia</h2>
+                <div class="space-y-4">
+                    <select id="band1" class="w-full p-3 border rounded-lg"></select>
+                    <select id="band2" class="w-full p-3 border rounded-lg"></select>
+                    <select id="band3" class="w-full p-3 border rounded-lg"></select>
+                </div>
+                <button onclick="calcValFromCol()" class="w-full mt-6 bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 transition">Ver Valor</button>
+                <div id="val_res" class="mt-6 text-center text-3xl font-bold text-emerald-700"></div>
+            </div>
+        </div>
+
+        <!-- Sección Valor a Colores -->
+        <div id="valor-a-colores" class="hidden-section max-w-2xl mx-auto">
+            <button onclick="showSection('home')" class="mb-4 text-orange-600 font-semibold hover:underline">Volver</button>
+            <div class="glass-card p-8 rounded-2xl shadow-lg text-center">
+                <h2 class="text-2xl font-bold mb-6">Valor a Colores</h2>
+                <input type="number" id="ohm_input" class="p-4 text-2xl border-2 border-orange-100 rounded-xl mb-6 outline-none focus:border-orange-500" placeholder="Ej: 4700">
+                <div class="resistor-body">
+                    <div id="v_band1" class="band rounded"></div>
+                    <div id="v_band2" class="band rounded"></div>
+                    <div id="v_band3" class="band rounded"></div>
+                    <div class="band rounded bg-[#D4AF37]"></div>
+                </div>
+                <button onclick="calcColFromVal()" class="w-full mt-6 bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition">Generar Colores</button>
+            </div>
+        </div>
 
     </main>
 
-    <script>
-        const colores = ["black", "brown", "red", "orange", "yellow", "green", "blue", "violet", "gray", "white"];
-        const coloresTole = { "5": "#d4af37", "10": "#c0c0c0" };
-
-        function actualizarRes() {
-            const b1 = document.getElementById('s1').value;
-            const b2 = document.getElementById('s2').value;
-            const mult = document.getElementById('s3').value;
-            const tole = document.getElementById('s4').value;
-
-            document.getElementById('band1').style.backgroundColor = colores[b1];
-            document.getElementById('band2').style.backgroundColor = colores[b2];
-            document.getElementById('band3').style.backgroundColor = colores[Math.log10(mult)];
-            document.getElementById('band4').style.backgroundColor = coloresTole[tole];
-
-            let valor = (parseInt(b1) * 10 + parseInt(b2)) * parseFloat(mult);
-            let d = valor >= 1000 ? (valor/1000).toFixed(1) + " k" : valor;
-            document.getElementById('res_final').innerText = `${d} Ω ±${tole}%`;
-        }
-
-        function calcularOhm() {
-            const v = document.getElementById('v_input').value;
-            const r = document.getElementById('r_input').value;
-            if(v && r) {
-                document.getElementById('ohm_res').innerText = (v/r).toFixed(3) + " Amperios (A)";
-            }
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
