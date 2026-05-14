@@ -1,176 +1,1139 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mirejuanca - Dashboard Pro</title>
-    <!-- Tailwind CSS desde CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .glass-card { background: white; border: 1px solid #e2e8f0; transition: all 0.3s; }
-        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .resistor-body { background: #d1b894; height: 40px; width: 160px; border-radius: 20px; display: flex; justify-content: space-around; align-items: center; margin: 20px auto; }
-        .band { width: 12px; height: 100%; border: 1px solid rgba(0,0,0,0.1); }
-        /* Forzamos que las secciones estén ocultas por defecto excepto el home */
-        .section-content { display: none; }
-        #home { display: grid; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CalcuMirejuanca</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00d4ff">
+
+<!-- iOS / iPadOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CalcuMirejuanca">
+<link rel="apple-touch-icon" href="icon.svg">
+
+<!-- SEO / descripción -->
+<meta name="description" content="Calculadora Ley de Ohm y Código de Colores de Resistencias">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<script>
+  if('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(r => console.log('SW registrado:', r.scope))
+        .catch(e => console.log('SW error:', e));
+    });
+  }
+</script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #111827;
+    --card: #1a2236;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #ff6b00;
+    --accent3: #00ff88;
+    --text: #e0eaff;
+    --muted: #6b7fa3;
+    --glow: 0 0 20px rgba(0,212,255,0.3);
+    --glow2: 0 0 20px rgba(255,107,0,0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(255,107,0,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    text-align: center;
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(0,212,255,0.07) 0%, transparent 100%);
+    z-index: 1;
+  }
+  header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.8rem, 6vw, 3.2rem);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    background: linear-gradient(90deg, #00d4ff, #ffffff, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 0 18px rgba(0,212,255,0.6));
+  }
+  header p {
+    color: var(--muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.25em;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 110px;
+    padding: 14px 10px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(0,212,255,0.05);
+  }
+
+  /* CONTENT */
+  .content { position: relative; z-index: 1; padding: 20px 16px; max-width: 680px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* AC/DC Toggle */
+  .mode-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: rgba(0,212,255,0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  /* INPUTS */
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-group label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .input-group label span { color: var(--accent); }
+  .input-group input, .input-group select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  .input-group input:focus, .input-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.15);
+  }
+  .input-group input::placeholder { color: var(--muted); font-size: 0.85rem; }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #0099cc, #00d4ff);
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,212,255,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,212,255,0.5); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-orange {
+    background: linear-gradient(135deg, #cc5500, #ff6b00);
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(255,107,0,0.3);
+  }
+  .btn-orange:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,107,0,0.5); }
+  .btn-green {
+    background: linear-gradient(135deg, #009955, #00ff88);
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,255,136,0.3);
+    margin-top: 10px;
+  }
+  .btn-green:hover { transform: translateY(-1px); }
+
+  /* RESULTS */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .result-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .result-box.v::before { background: #00d4ff; }
+  .result-box.r::before { background: #ff6b00; }
+  .result-box.i::before { background: #00ff88; }
+  .result-box.p::before { background: #ff00aa; }
+  .result-label {
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .result-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .result-box.v .result-value { color: #00d4ff; }
+  .result-box.r .result-value { color: #ff6b00; }
+  .result-box.i .result-value { color: #00ff88; }
+  .result-box.p .result-value { color: #ff00aa; }
+  .result-unit { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+  /* AC EXTRAS */
+  .ac-info {
+    background: rgba(255,107,0,0.07);
+    border: 1px solid rgba(255,107,0,0.2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .ac-info strong { color: var(--accent2); }
+
+  /* RESISTOR VISUAL */
+  .resistor-svg-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .resistor-body {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .band-display {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .band-select-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .band-select-group label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; }
+  .band-select-group select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 4px;
+    border-radius: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    outline: none;
+    width: 95px;
+  }
+  .color-preview {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+  }
+
+  /* RESISTOR SVG */
+  svg.resistor { width: 100%; max-width: 340px; height: 80px; }
+
+  /* CAMERA */
+  .camera-container {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+    margin-bottom: 14px;
+  }
+  #camera-video {
+    width: 100%;
+    display: block;
+    border-radius: 10px;
+  }
+  .camera-overlay {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%; height: 40px;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+    pointer-events: none;
+  }
+  .camera-overlay::before, .camera-overlay::after {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    border-color: var(--accent2);
+    border-style: solid;
+  }
+  .camera-overlay::before { top: -2px; left: -2px; border-width: 2px 0 0 2px; }
+  .camera-overlay::after { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+
+  #camera-canvas { display: none; }
+
+  /* VALUE TO COLOR */
+  .value-result {
+    margin-top: 16px;
+    display: none;
+  }
+  .ohm-value-display {
+    text-align: center;
+    padding: 10px;
+    background: var(--panel);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    color: var(--accent3);
+  }
+
+  /* INFO BOXES */
+  .info-box {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-top: 12px;
+  }
+  .info-box strong { color: var(--accent); }
+
+  .formula-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .formula-chip {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    color: var(--accent);
+  }
+
+  .error-msg {
+    color: #ff4466;
+    font-size: 0.75rem;
+    margin-top: 8px;
+    text-align: center;
+    display: none;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media(max-width:400px) {
+    .input-grid { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body>
 
-    <header class="bg-indigo-600 text-white p-6 shadow-md">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-3xl font-bold">Mirejuanca <span class="font-light opacity-80">Dashboard</span></h1>
-            <button onclick="showSection('home')" class="bg-indigo-500 px-4 py-2 rounded-lg hover:bg-indigo-400 transition">Inicio</button>
+<header>
+  <h1>CalcuMirejuanca</h1>
+  <p>⚡ Calculadora Electrónica Avanzada ⚡</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('ohm')">⚡ Ley de Ohm</button>
+  <button class="tab-btn" onclick="switchTab('colors')">🎨 Colores → Ω</button>
+  <button class="tab-btn" onclick="switchTab('tocolors')">Ω → 🎨 Colores</button>
+  <button class="tab-btn" onclick="switchTab('camera')">📷 Cámara</button>
+</div>
+
+<div class="content">
+
+  <!-- ===================== TAB 1: OHM ===================== -->
+  <div class="tab-panel active" id="tab-ohm">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Tipo de corriente</div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-dc" onclick="setMode('DC')">CC — Continua</button>
+        <button class="mode-btn" id="btn-ac" onclick="setMode('AC')">CA — Alterna</button>
+      </div>
+
+      <div class="card-title"><span class="dot"></span> Introduce 2 valores</div>
+
+      <div class="input-grid">
+        <div class="input-group">
+          <label>Tensión <span>(V)</span></label>
+          <input type="number" id="ohm-v" placeholder="Voltios" step="any" oninput="clearOhm()">
         </div>
-    </header>
-
-    <main class="container mx-auto p-6">
-        
-        <!-- Dashboard Home -->
-        <div id="home" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div onclick="showSection('ohm')" class="glass-card p-8 rounded-2xl cursor-pointer border-t-4 border-indigo-500">
-                <div class="bg-indigo-100 w-12 h-12 rounded-full flex items-center justify-center mb-4"><i class="fas fa-bolt text-indigo-600"></i></div>
-                <h3 class="text-xl font-bold">Ley de Ohm & Potencia</h3>
-                <p class="text-slate-500 text-sm">Calcula V, I, R y P con 2 datos conocidos.</p>
-            </div>
-
-            <div onclick="showSection('colores-a-valor')" class="glass-card p-8 rounded-2xl cursor-pointer border-t-4 border-emerald-500">
-                <div class="bg-emerald-100 w-12 h-12 rounded-full flex items-center justify-center mb-4"><i class="fas fa-palette text-emerald-600"></i></div>
-                <h3 class="text-xl font-bold">Código a Valor</h3>
-                <p class="text-slate-500 text-sm">Convierte los colores de la resistencia a Ohmios.</p>
-            </div>
-
-            <div onclick="showSection('valor-a-colores')" class="glass-card p-8 rounded-2xl cursor-pointer border-t-4 border-orange-500">
-                <div class="bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-4"><i class="fas fa-microchip text-orange-600"></i></div>
-                <h3 class="text-xl font-bold">Valor a Colores</h3>
-                <p class="text-slate-500 text-sm">Introduce los Ohmios y mira los colores.</p>
-            </div>
+        <div class="input-group">
+          <label>Resistencia <span>(Ω)</span></label>
+          <input type="number" id="ohm-r" placeholder="Ohmios" step="any" oninput="clearOhm()">
         </div>
-
-        <!-- Sección Ohm -->
-        <div id="ohm" class="section-content max-w-xl mx-auto">
-            <div class="bg-white p-8 rounded-2xl shadow-lg">
-                <h2 class="text-2xl font-bold mb-6 text-indigo-600">Calculadora Ley de Ohm</h2>
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <input type="number" id="v_in" class="p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Voltios (V)">
-                    <input type="number" id="i_in" class="p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Amperios (I)">
-                    <input type="number" id="r_in" class="p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Ohmios (R)">
-                    <input type="number" id="p_in" class="p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Watios (P)">
-                </div>
-                <button onclick="calcOhm()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold">Calcular Resultados</button>
-                <div id="ohm_results" class="mt-6 p-4 bg-indigo-50 rounded-lg text-center font-mono text-indigo-900 hidden"></div>
-            </div>
+        <div class="input-group">
+          <label>Intensidad <span>(A)</span></label>
+          <input type="number" id="ohm-i" placeholder="Amperios" step="any" oninput="clearOhm()">
         </div>
-
-        <!-- Sección Colores a Valor -->
-        <div id="colores-a-valor" class="section-content max-w-xl mx-auto">
-            <div class="bg-white p-8 rounded-2xl shadow-lg">
-                <h2 class="text-2xl font-bold mb-6 text-emerald-600">Colores a Ohmios</h2>
-                <div class="space-y-4">
-                    <select id="band1" class="w-full p-3 border rounded-lg"></select>
-                    <select id="band2" class="w-full p-3 border rounded-lg"></select>
-                    <select id="band3" class="w-full p-3 border rounded-lg"></select>
-                </div>
-                <button onclick="calcValFromCol()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold mt-6">Obtener Valor</button>
-                <div id="val_res" class="mt-6 text-center text-3xl font-bold text-emerald-700"></div>
-            </div>
+        <div class="input-group">
+          <label>Potencia <span>(W)</span></label>
+          <input type="number" id="ohm-p" placeholder="Vatios" step="any" oninput="clearOhm()">
         </div>
+      </div>
 
-        <!-- Sección Valor a Colores -->
-        <div id="valor-a-colores" class="section-content max-w-xl mx-auto text-center">
-            <div class="bg-white p-8 rounded-2xl shadow-lg">
-                <h2 class="text-2xl font-bold mb-6 text-orange-600">Ohmios a Colores</h2>
-                <input type="number" id="ohm_input" class="w-full p-4 text-2xl border-2 rounded-xl mb-6 outline-none focus:border-orange-500" placeholder="Ej: 4700">
-                <div class="resistor-body">
-                    <div id="v_band1" class="band"></div>
-                    <div id="v_band2" class="band"></div>
-                    <div id="v_band3" class="band"></div>
-                    <div class="band bg-[#D4AF37]"></div>
-                </div>
-                <button onclick="calcColFromVal()" class="w-full bg-orange-600 text-white py-3 rounded-lg font-bold">Ver Bandas</button>
-            </div>
+      <!-- AC extras -->
+      <div id="ac-extras" style="display:none; margin-bottom:14px;">
+        <div class="input-grid">
+          <div class="input-group">
+            <label>Factor de potencia <span>(cosφ)</span></label>
+            <input type="number" id="ohm-fp" placeholder="0.00 – 1.00" step="0.01" min="0" max="1" value="1">
+          </div>
+          <div class="input-group">
+            <label>Frecuencia <span>(Hz)</span></label>
+            <input type="number" id="ohm-hz" placeholder="50 / 60" value="50">
+          </div>
         </div>
+      </div>
 
-    </main>
+      <button class="btn btn-primary" onclick="calcOhm()">Calcular</button>
+      <p class="error-msg" id="ohm-error">⚠ Introduce exactamente 2 valores</p>
 
-    <script>
-        const coloresRef = {
-            "negro": {v: 0, hex: "#000000", m: 1},
-            "marron": {v: 1, hex: "#8B4513", m: 10},
-            "rojo": {v: 2, hex: "#FF0000", m: 100},
-            "naranja": {v: 3, hex: "#FFA500", m: 1000},
-            "amarillo": {v: 4, hex: "#FFFF00", m: 10000},
-            "verde": {v: 5, hex: "#008000", m: 100000},
-            "azul": {v: 6, hex: "#0000FF", m: 1000000},
-            "violeta": {v: 7, hex: "#EE82EE", m: 10000000},
-            "gris": {v: 8, hex: "#808080", m: 100000000},
-            "blanco": {v: 9, hex: "#FFFFFF", m: 1000000000}
-        };
+      <div class="results-grid" id="ohm-results" style="display:none;">
+        <div class="result-box v">
+          <div class="result-label">Tensión</div>
+          <div class="result-value" id="res-v">—</div>
+          <div class="result-unit">Voltios (V)</div>
+        </div>
+        <div class="result-box r">
+          <div class="result-label">Resistencia</div>
+          <div class="result-value" id="res-r">—</div>
+          <div class="result-unit">Ohmios (Ω)</div>
+        </div>
+        <div class="result-box i">
+          <div class="result-label">Intensidad</div>
+          <div class="result-value" id="res-i">—</div>
+          <div class="result-unit">Amperios (A)</div>
+        </div>
+        <div class="result-box p">
+          <div class="result-label">Potencia</div>
+          <div class="result-value" id="res-p">—</div>
+          <div class="result-unit">Vatios (W)</div>
+        </div>
+      </div>
 
-        function showSection(id) {
-            document.querySelectorAll('.section-content, #home').forEach(s => s.style.display = 'none');
-            const target = document.getElementById(id);
-            if(id === 'home') target.style.display = 'grid';
-            else target.style.display = 'block';
-        }
+      <div id="ac-result-info" style="display:none;" class="ac-info"></div>
+    </div>
 
-        window.onload = () => {
-            const selects = ['band1', 'band2', 'band3'];
-            const nombres = Object.keys(coloresRef);
-            selects.forEach(s_id => {
-                const el = document.getElementById(s_id);
-                nombres.forEach(col => {
-                    let opt = document.createElement('option');
-                    opt.value = col;
-                    opt.textContent = col.toUpperCase();
-                    el.appendChild(opt);
-                });
-            });
-        };
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Fórmulas utilizadas</div>
+      <div class="info-box">
+        <strong>Corriente Continua (CC/DC):</strong><br>
+        V = I × R &nbsp;|&nbsp; I = V / R &nbsp;|&nbsp; R = V / I &nbsp;|&nbsp; P = V × I
+        <div class="formula-row">
+          <span class="formula-chip">P = I² × R</span>
+          <span class="formula-chip">P = V² / R</span>
+          <span class="formula-chip">V = √(P × R)</span>
+          <span class="formula-chip">I = √(P / R)</span>
+        </div>
+        <br>
+        <strong>Corriente Alterna (CA/AC):</strong><br>
+        P activa = V × I × cosφ &nbsp;|&nbsp; S = V × I (VA)<br>
+        Q reactiva = V × I × sinφ &nbsp;|&nbsp; Z = V / I (impedancia)
+      </div>
+    </div>
+  </div>
 
-        function calcOhm() {
-            let v = parseFloat(document.getElementById('v_in').value);
-            let i = parseFloat(document.getElementById('i_in').value);
-            let r = parseFloat(document.getElementById('r_in').value);
-            let p = parseFloat(document.getElementById('p_in').value);
+  <!-- ===================== TAB 2: COLORES → Ω ===================== -->
+  <div class="tab-panel" id="tab-colors">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Selecciona los colores de las bandas</div>
 
-            if (v && i) { r = v/i; p = v*i; }
-            else if (v && r) { i = v/r; p = (v**2)/r; }
-            else if (i && r) { v = i*r; p = (i**2)*r; }
-            else if (p && v) { i = p/v; r = (v**2)/p; }
-            else if (p && i) { v = p/i; r = p/(i**2); }
-            else if (p && r) { v = Math.sqrt(p*r); i = Math.sqrt(p/r); }
+      <div class="input-group" style="margin-bottom:14px;">
+        <label>Número de bandas</label>
+        <select id="num-bands" onchange="updateBandSelects()">
+          <option value="4">4 bandas</option>
+          <option value="5">5 bandas</option>
+        </select>
+      </div>
 
-            const res = document.getElementById('ohm_results');
-            res.classList.remove('hidden');
-            res.innerHTML = `V: ${v.toFixed(2)}V | I: ${i.toFixed(2)}A<br>R: ${r.toFixed(2)}Ω | P: ${p.toFixed(2)}W`;
-        }
+      <div id="band-selects" class="band-display"></div>
 
-        function calcValFromCol() {
-            const b1 = document.getElementById('band1').value;
-            const b2 = document.getElementById('band2').value;
-            const b3 = document.getElementById('band3').value;
-            const total = ((coloresRef[b1].v * 10) + coloresRef[b2].v) * coloresRef[b3].m;
-            document.getElementById('val_res').textContent = total >= 1000 ? (total/1000) + " kΩ" : total + " Ω";
-        }
+      <div class="resistor-svg-container">
+        <svg class="resistor" id="resistor-svg-manual" viewBox="0 0 340 80" xmlns="http://www.w3.org/2000/svg">
+          <!-- wires -->
+          <line x1="0" y1="40" x2="60" y2="40" stroke="#aaa" stroke-width="3"/>
+          <line x1="280" y1="40" x2="340" y2="40" stroke="#aaa" stroke-width="3"/>
+          <!-- body -->
+          <rect x="60" y="18" width="220" height="44" rx="10" fill="#c8b08a" stroke="#8a6a3a" stroke-width="2"/>
+          <!-- bands filled by JS -->
+          <rect id="mb1" x="90" y="18" width="22" height="44" rx="2" fill="#000"/>
+          <rect id="mb2" x="122" y="18" width="22" height="44" rx="2" fill="#000"/>
+          <rect id="mb3" x="154" y="18" width="22" height="44" rx="2" fill="#000"/>
+          <rect id="mb4" x="186" y="18" width="22" height="44" rx="2" fill="#000"/>
+          <rect id="mb5" x="218" y="18" width="22" height="44" rx="2" fill="none"/>
+          <!-- tolerance band -->
+          <rect id="mb-tol" x="242" y="18" width="20" height="44" rx="2" fill="#c8a000"/>
+        </svg>
+      </div>
 
-        function calcColFromVal() {
-            let val = document.getElementById('ohm_input').value;
-            if (!val || val < 10) return alert("Introduce un valor válido");
-            let sVal = Math.floor(val).toString();
-            let d1 = parseInt(sVal[0]);
-            let d2 = parseInt(sVal[1]);
-            let ceros = sVal.length - 2;
-            const lista = Object.keys(coloresRef);
-            const c1 = lista.find(k => coloresRef[k].v === d1);
-            const c2 = lista.find(k => coloresRef[k].v === d2);
-            const c3 = lista.find(k => coloresRef[k].v === ceros);
-            document.getElementById('v_band1').style.backgroundColor = coloresRef[c1].hex;
-            document.getElementById('v_band2').style.backgroundColor = coloresRef[c2].hex;
-            document.getElementById('v_band3').style.backgroundColor = coloresRef[c3].hex;
-        }
-    </script>
+      <button class="btn btn-primary" onclick="calcFromColors()">Calcular valor Ω</button>
+
+      <div id="color-result" class="value-result">
+        <div class="ohm-value-display" id="color-result-text"></div>
+        <div class="info-box" id="color-result-detail"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 3: Ω → COLORES ===================== -->
+  <div class="tab-panel" id="tab-tocolors">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Valor Ω → Imagen de colores</div>
+
+      <div class="input-group" style="margin-bottom:14px;">
+        <label>Valor de la resistencia <span>(Ω)</span></label>
+        <input type="number" id="val-to-color" placeholder="Ej: 4700, 10000, 330" step="any">
+      </div>
+      <div class="input-group" style="margin-bottom:14px;">
+        <label>Tolerancia</label>
+        <select id="tol-select">
+          <option value="gold">Dorado ±5%</option>
+          <option value="silver">Plateado ±10%</option>
+          <option value="brown">Marrón ±1%</option>
+          <option value="red">Rojo ±2%</option>
+        </select>
+      </div>
+      <div class="input-group" style="margin-bottom:14px;">
+        <label>Número de bandas</label>
+        <select id="out-bands">
+          <option value="4">4 bandas</option>
+          <option value="5">5 bandas</option>
+        </select>
+      </div>
+
+      <button class="btn btn-orange" onclick="calcToColors()">Generar imagen</button>
+      <p class="error-msg" id="toc-error">⚠ Valor no representable con bandas estándar</p>
+
+      <div id="toc-result" class="value-result">
+        <div class="ohm-value-display" id="toc-value-text"></div>
+        <div class="resistor-svg-container" style="margin:10px 0;">
+          <svg class="resistor" id="resistor-svg-out" viewBox="0 0 340 80" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="40" x2="60" y2="40" stroke="#aaa" stroke-width="3"/>
+            <line x1="280" y1="40" x2="340" y2="40" stroke="#aaa" stroke-width="3"/>
+            <rect x="60" y="18" width="220" height="44" rx="10" fill="#c8b08a" stroke="#8a6a3a" stroke-width="2"/>
+            <rect id="ob1" x="90" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="ob2" x="122" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="ob3" x="154" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="ob4" x="186" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="ob5" x="218" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="ob-tol" x="242" y="18" width="20" height="44" rx="2" fill="none"/>
+          </svg>
+        </div>
+        <div class="info-box" id="toc-band-detail"></div>
+        <button class="btn btn-green" onclick="downloadResistorSVG()">⬇ Descargar imagen SVG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 4: CÁMARA ===================== -->
+  <div class="tab-panel" id="tab-camera">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Identificar resistencia por cámara</div>
+      <div class="info-box" style="margin-bottom:14px;">
+        Apunta la cámara a la resistencia, centra las bandas en el recuadro y pulsa <strong>Capturar</strong>. El sistema analizará los colores y calculará el valor.
+      </div>
+
+      <div class="camera-container" id="camera-wrap" style="display:none;">
+        <video id="camera-video" autoplay playsinline></video>
+        <div class="camera-overlay"></div>
+      </div>
+      <canvas id="camera-canvas"></canvas>
+
+      <button class="btn btn-primary" id="btn-cam-start" onclick="startCamera()">📷 Iniciar cámara</button>
+      <button class="btn btn-orange" id="btn-cam-cap" style="display:none;margin-top:10px;" onclick="captureFrame()">🎯 Capturar y analizar</button>
+      <button class="btn" id="btn-cam-stop" style="display:none;margin-top:10px;background:var(--panel);border:1px solid var(--border);color:var(--muted);" onclick="stopCamera()">✕ Cerrar cámara</button>
+
+      <div id="cam-result" class="value-result">
+        <div class="resistor-svg-container">
+          <svg class="resistor" id="resistor-svg-cam" viewBox="0 0 340 80" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="40" x2="60" y2="40" stroke="#aaa" stroke-width="3"/>
+            <line x1="280" y1="40" x2="340" y2="40" stroke="#aaa" stroke-width="3"/>
+            <rect x="60" y="18" width="220" height="44" rx="10" fill="#c8b08a" stroke="#8a6a3a" stroke-width="2"/>
+            <rect id="cb1" x="90" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="cb2" x="122" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="cb3" x="154" y="18" width="22" height="44" rx="2" fill="none"/>
+            <rect id="cb-tol" x="242" y="18" width="20" height="44" rx="2" fill="none"/>
+          </svg>
+        </div>
+        <div class="ohm-value-display" id="cam-result-text"></div>
+        <div class="info-box" id="cam-result-detail"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<script>
+// ========== DATA ==========
+const COLORS = [
+  { name:'Negro',    hex:'#1a1a1a', digit:0, mult:1,        tol:null },
+  { name:'Marrón',   hex:'#8B4513', digit:1, mult:10,       tol:'±1%' },
+  { name:'Rojo',     hex:'#CC0000', digit:2, mult:100,      tol:'±2%' },
+  { name:'Naranja',  hex:'#FF6600', digit:3, mult:1000,     tol:'±3%' },
+  { name:'Amarillo', hex:'#FFD700', digit:4, mult:10000,    tol:'±4%' },
+  { name:'Verde',    hex:'#228B22', digit:5, mult:100000,   tol:'±0.5%' },
+  { name:'Azul',     hex:'#0066CC', digit:6, mult:1000000,  tol:'±0.25%' },
+  { name:'Violeta',  hex:'#8B008B', digit:7, mult:1e7,      tol:'±0.1%' },
+  { name:'Gris',     hex:'#808080', digit:8, mult:1e8,      tol:'±0.05%' },
+  { name:'Blanco',   hex:'#E8E8E8', digit:9, mult:1e9,      tol:null },
+  { name:'Dorado',   hex:'#C8A000', digit:null, mult:0.1,   tol:'±5%' },
+  { name:'Plateado', hex:'#A0A0A0', digit:null, mult:0.01,  tol:'±10%' },
+];
+
+const DIGIT_COLORS = COLORS.filter(c => c.digit !== null);
+const MULT_COLORS  = COLORS.filter(c => c.mult !== undefined);
+const TOL_COLORS   = COLORS.filter(c => c.tol !== null);
+
+function colorByName(name) { return COLORS.find(c=>c.name===name); }
+function colorByHex(hex)   { return COLORS.find(c=>c.hex===hex); }
+
+function fmtOhm(v) {
+  if(v >= 1e9) return (v/1e9).toPrecision(4) + ' GΩ';
+  if(v >= 1e6) return (v/1e6).toPrecision(4) + ' MΩ';
+  if(v >= 1e3) return (v/1e3).toPrecision(4) + ' kΩ';
+  return v.toPrecision(4) + ' Ω';
+}
+
+// ========== TABS ==========
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ========== OHM ==========
+let currentMode = 'DC';
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('btn-dc').classList.toggle('active', m==='DC');
+  document.getElementById('btn-ac').classList.toggle('active', m==='AC');
+  document.getElementById('ac-extras').style.display = m==='AC' ? 'block' : 'none';
+  clearOhm();
+}
+
+function clearOhm() {
+  document.getElementById('ohm-results').style.display = 'none';
+  document.getElementById('ohm-error').style.display = 'none';
+  document.getElementById('ac-result-info').style.display = 'none';
+}
+
+function calcOhm() {
+  const V = parseFloat(document.getElementById('ohm-v').value);
+  const R = parseFloat(document.getElementById('ohm-r').value);
+  const I = parseFloat(document.getElementById('ohm-i').value);
+  const P = parseFloat(document.getElementById('ohm-p').value);
+  const vals = [
+    {k:'V', v:V}, {k:'R', v:R}, {k:'I', v:I}, {k:'P', v:P}
+  ].filter(x => !isNaN(x.v) && x.v !== '');
+
+  if(vals.length !== 2) {
+    document.getElementById('ohm-error').style.display = 'block';
+    document.getElementById('ohm-results').style.display = 'none';
+    return;
+  }
+  document.getElementById('ohm-error').style.display = 'none';
+
+  const known = {};
+  vals.forEach(x => known[x.k] = x.v);
+
+  let v, r, i, p;
+  try {
+    if('V' in known && 'R' in known) { v=known.V; r=known.R; i=v/r; p=v*i; }
+    else if('V' in known && 'I' in known) { v=known.V; i=known.I; r=v/i; p=v*i; }
+    else if('V' in known && 'P' in known) { v=known.V; p=known.P; i=p/v; r=v/i; }
+    else if('R' in known && 'I' in known) { r=known.R; i=known.I; v=i*r; p=v*i; }
+    else if('R' in known && 'P' in known) { r=known.R; p=known.P; i=Math.sqrt(p/r); v=i*r; }
+    else if('I' in known && 'P' in known) { i=known.I; p=known.P; v=p/i; r=v/i; }
+  } catch(e) { v=r=i=p=NaN; }
+
+  function fmt(n) {
+    if(isNaN(n)||!isFinite(n)) return '—';
+    if(Math.abs(n)>=1000) return (n/1000).toPrecision(4)+'k';
+    if(Math.abs(n)<0.001) return (n*1e6).toPrecision(4)+'μ';
+    return parseFloat(n.toPrecision(5)).toString();
+  }
+
+  document.getElementById('res-v').textContent = fmt(v);
+  document.getElementById('res-r').textContent = fmt(r);
+  document.getElementById('res-i').textContent = fmt(i);
+  document.getElementById('res-p').textContent = fmt(p);
+  document.getElementById('ohm-results').style.display = 'grid';
+
+  if(currentMode === 'AC') {
+    const fp = parseFloat(document.getElementById('ohm-fp').value) || 1;
+    const hz = parseFloat(document.getElementById('ohm-hz').value) || 50;
+    const Pa = (v*i*fp);
+    const S  = (v*i);
+    const Q  = S*Math.sqrt(1 - fp*fp);
+    const el = document.getElementById('ac-result-info');
+    el.innerHTML = `
+      <strong>Resultados CA:</strong><br>
+      ⚡ Potencia Activa (P): ${Pa.toPrecision(4)} W<br>
+      🔄 Potencia Aparente (S): ${S.toPrecision(4)} VA<br>
+      💡 Potencia Reactiva (Q): ${Q.toPrecision(4)} VAr<br>
+      📐 Factor de potencia (cosφ): ${fp}<br>
+      🌀 Frecuencia: ${hz} Hz<br>
+      🔗 Impedancia (Z): ${(v/i).toPrecision(4)} Ω
+    `;
+    el.style.display = 'block';
+  }
+}
+
+// ========== BAND SELECTS ==========
+function makeColorOptions(filter, selectedName) {
+  return filter.map(c =>
+    `<option value="${c.name}" style="background:${c.hex};color:${c.digit<=4||c.name==='Negro'?'#fff':'#000'}"
+     ${c.name===selectedName?'selected':''}>${c.name} ${c.digit!==null?'('+c.digit+')':''}</option>`
+  ).join('');
+}
+
+function updateBandSelects() {
+  const n = parseInt(document.getElementById('num-bands').value);
+  const container = document.getElementById('band-selects');
+  container.innerHTML = '';
+
+  const defaults4 = ['Amarillo','Violeta','Naranja','Dorado'];
+  const defaults5 = ['Marrón','Negro','Negro','Marrón','Dorado'];
+  const defs = n===4 ? defaults4 : defaults5;
+
+  const digitCount = n === 4 ? 2 : 3;
+  for(let i=0;i<digitCount;i++){
+    const d = colorByName(defs[i]);
+    container.innerHTML += `
+      <div class="band-select-group">
+        <label>Banda ${i+1}</label>
+        <div class="color-preview" id="prev-b${i+1}" style="background:${d?d.hex:'#000'}"></div>
+        <select id="band-sel-${i+1}" onchange="updateBandPreview(${i+1},'band-sel-${i+1}','prev-b${i+1}')">
+          ${makeColorOptions(DIGIT_COLORS, defs[i])}
+        </select>
+      </div>`;
+  }
+  // Multiplier
+  const mDef = defs[digitCount];
+  const mCol = colorByName(mDef);
+  container.innerHTML += `
+    <div class="band-select-group">
+      <label>Multiplicador</label>
+      <div class="color-preview" id="prev-mult" style="background:${mCol?mCol.hex:'#000'}"></div>
+      <select id="band-sel-mult" onchange="updateBandPreview(0,'band-sel-mult','prev-mult')">
+        ${makeColorOptions(MULT_COLORS, mDef)}
+      </select>
+    </div>`;
+  // Tolerance
+  const tDef = 'Dorado';
+  const tCol = colorByName(tDef);
+  container.innerHTML += `
+    <div class="band-select-group">
+      <label>Tolerancia</label>
+      <div class="color-preview" id="prev-tol" style="background:${tCol?tCol.hex:'#c8a000'}"></div>
+      <select id="band-sel-tol" onchange="updateBandPreview(0,'band-sel-tol','prev-tol')">
+        ${makeColorOptions(TOL_COLORS, tDef)}
+      </select>
+    </div>`;
+
+  updateManualResistorSVG();
+}
+
+function updateBandPreview(idx, selId, prevId) {
+  const name = document.getElementById(selId).value;
+  const c = colorByName(name);
+  if(c) document.getElementById(prevId).style.background = c.hex;
+  updateManualResistorSVG();
+}
+
+function updateManualResistorSVG() {
+  const n = parseInt(document.getElementById('num-bands')?.value || 4);
+  const digitCount = n===4?2:3;
+  const bands = [];
+  for(let i=1;i<=digitCount;i++){
+    const el = document.getElementById(`band-sel-${i}`);
+    if(el) bands.push(colorByName(el.value));
+  }
+  const multEl = document.getElementById('band-sel-mult');
+  const tolEl  = document.getElementById('band-sel-tol');
+  const mult = multEl ? colorByName(multEl.value) : null;
+  const tol  = tolEl  ? colorByName(tolEl.value)  : null;
+
+  const positions = n===4
+    ? ['mb1','mb2','mb4','mb5']
+    : ['mb1','mb2','mb3','mb4','mb5'];
+
+  // reset all
+  ['mb1','mb2','mb3','mb4','mb5'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.setAttribute('fill','none');
+  });
+
+  bands.forEach((c,i)=>{
+    const el = document.getElementById(positions[i]);
+    if(el && c) el.setAttribute('fill', c.hex);
+  });
+  const multPos = n===4 ? 'mb5' : null;
+  // place mult at last digit position+1
+  const multId = n===4 ? 'mb4' : 'mb5'; // already in positions above, handled below
+  // Actually redo: 4band: b1,b2=digit, b3=mult, b4 hidden, tol=mb-tol
+  resetManualBands();
+  if(n===4){
+    if(bands[0]) document.getElementById('mb1').setAttribute('fill', bands[0].hex);
+    if(bands[1]) document.getElementById('mb2').setAttribute('fill', bands[1].hex);
+    if(mult)     document.getElementById('mb3').setAttribute('fill', mult.hex);
+    document.getElementById('mb4').setAttribute('fill','none');
+    document.getElementById('mb5').setAttribute('fill','none');
+  } else {
+    if(bands[0]) document.getElementById('mb1').setAttribute('fill', bands[0].hex);
+    if(bands[1]) document.getElementById('mb2').setAttribute('fill', bands[1].hex);
+    if(bands[2]) document.getElementById('mb3').setAttribute('fill', bands[2].hex);
+    if(mult)     document.getElementById('mb4').setAttribute('fill', mult.hex);
+    document.getElementById('mb5').setAttribute('fill','none');
+  }
+  if(tol) document.getElementById('mb-tol').setAttribute('fill', tol.hex);
+}
+
+function resetManualBands(){
+  ['mb1','mb2','mb3','mb4','mb5','mb-tol'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.setAttribute('fill','none');
+  });
+}
+
+function calcFromColors() {
+  const n = parseInt(document.getElementById('num-bands').value);
+  const digitCount = n===4?2:3;
+  let digits = [];
+  for(let i=1;i<=digitCount;i++){
+    const name = document.getElementById(`band-sel-${i}`).value;
+    const c = colorByName(name);
+    if(c) digits.push(c.digit);
+  }
+  const multName = document.getElementById('band-sel-mult').value;
+  const tolName  = document.getElementById('band-sel-tol').value;
+  const mult = colorByName(multName);
+  const tol  = colorByName(tolName);
+
+  let baseVal = 0;
+  digits.forEach((d,i) => baseVal = baseVal*10 + d);
+  const value = baseVal * mult.mult;
+
+  document.getElementById('color-result-text').textContent = fmtOhm(value);
+  document.getElementById('color-result-detail').innerHTML =
+    `Dígitos: ${digits.join('')} × ${mult.mult} = <strong>${fmtOhm(value)}</strong><br>
+     Tolerancia: ${tol ? tol.tol : '—'}<br>
+     Rango: ${fmtOhm(value*(1-parseFloat(tol?tol.tol:'±5%')/100))} — ${fmtOhm(value*(1+parseFloat(tol?tol.tol:'±5%')/100))}`;
+  document.getElementById('color-result').style.display = 'block';
+}
+
+// ========== VALUE TO COLORS ==========
+function calcToColors() {
+  const val = parseFloat(document.getElementById('val-to-color').value);
+  const tolKey = document.getElementById('tol-select').value;
+  const nBands = parseInt(document.getElementById('out-bands').value);
+  const errEl = document.getElementById('toc-error');
+
+  errEl.style.display = 'none';
+  document.getElementById('toc-result').style.display = 'none';
+
+  if(isNaN(val) || val <= 0){ errEl.style.display='block'; return; }
+
+  const tolMap = {gold:'Dorado', silver:'Plateado', brown:'Marrón', red:'Rojo'};
+  const tolName = tolMap[tolKey];
+  const tolColor = colorByName(tolName);
+
+  // Find best representation
+  const digitCount = nBands===4 ? 2 : 3;
+  let result = findBands(val, digitCount);
+
+  if(!result){ errEl.style.display='block'; return; }
+
+  const {digits, multColor} = result;
+
+  // Draw SVG
+  const ids4 = ['ob1','ob2','ob3']; // 4band: 2 digits + mult in ob3, tol in ob-tol
+  const ids5 = ['ob1','ob2','ob3','ob4']; // 5band: 3 digits + mult in ob4
+
+  ['ob1','ob2','ob3','ob4','ob5','ob-tol'].forEach(id=>{
+    document.getElementById(id).setAttribute('fill','none');
+  });
+
+  const digitColors = digits.map(d => DIGIT_COLORS.find(c=>c.digit===d));
+  if(nBands===4){
+    if(digitColors[0]) document.getElementById('ob1').setAttribute('fill', digitColors[0].hex);
+    if(digitColors[1]) document.getElementById('ob2').setAttribute('fill', digitColors[1].hex);
+    if(multColor)      document.getElementById('ob3').setAttribute('fill', multColor.hex);
+  } else {
+    if(digitColors[0]) document.getElementById('ob1').setAttribute('fill', digitColors[0].hex);
+    if(digitColors[1]) document.getElementById('ob2').setAttribute('fill', digitColors[1].hex);
+    if(digitColors[2]) document.getElementById('ob3').setAttribute('fill', digitColors[2].hex);
+    if(multColor)      document.getElementById('ob4').setAttribute('fill', multColor.hex);
+  }
+  document.getElementById('ob-tol').setAttribute('fill', tolColor.hex);
+  document.getElementById('ob5').setAttribute('fill','none');
+
+  // Detail text
+  const bandNames = digits.map(d=>DIGIT_COLORS.find(c=>c.digit===d).name);
+  let detail = '';
+  bandNames.forEach((n,i)=>detail+=`Banda ${i+1}: <strong>${n}</strong> (${digits[i]})<br>`);
+  detail += `Multiplicador: <strong>${multColor.name}</strong> (×${multColor.mult})<br>`;
+  detail += `Tolerancia: <strong>${tolColor.name}</strong> (${tolColor.tol})`;
+
+  document.getElementById('toc-value-text').textContent = fmtOhm(val);
+  document.getElementById('toc-band-detail').innerHTML = detail;
+  document.getElementById('toc-result').style.display = 'block';
+}
+
+function findBands(val, digitCount) {
+  // Try each multiplier
+  for(const multColor of MULT_COLORS){
+    const base = val / multColor.mult;
+    if(base < 1 || base >= Math.pow(10, digitCount)) continue;
+    const rounded = Math.round(base);
+    if(Math.abs(rounded * multColor.mult - val) / val > 0.001) continue;
+    const digits = [];
+    let n = rounded;
+    for(let i=digitCount-1;i>=0;i--){
+      digits[i] = n % 10;
+      n = Math.floor(n/10);
+    }
+    if(digits.some(d=>d<0||d>9)) continue;
+    if(digits.every(d=>DIGIT_COLORS.find(c=>c.digit===d))) return {digits, multColor};
+  }
+  return null;
+}
+
+function downloadResistorSVG() {
+  const svg = document.getElementById('resistor-svg-out');
+  const data = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([data], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'resistencia.svg'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ========== CAMERA ==========
+let videoStream = null;
+
+async function startCamera() {
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }
+    });
+    const vid = document.getElementById('camera-video');
+    vid.srcObject = videoStream;
+    document.getElementById('camera-wrap').style.display = 'block';
+    document.getElementById('btn-cam-start').style.display = 'none';
+    document.getElementById('btn-cam-cap').style.display = 'block';
+    document.getElementById('btn-cam-stop').style.display = 'block';
+  } catch(e) {
+    alert('No se pudo acceder a la cámara. Verifica los permisos del navegador.');
+  }
+}
+
+function stopCamera() {
+  if(videoStream) videoStream.getTracks().forEach(t=>t.stop());
+  document.getElementById('camera-wrap').style.display = 'none';
+  document.getElementById('btn-cam-start').style.display = 'block';
+  document.getElementById('btn-cam-cap').style.display = 'none';
+  document.getElementById('btn-cam-stop').style.display = 'none';
+}
+
+function captureFrame() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+
+  // Sample 4 bands from the center horizontal strip
+  const centerY = Math.floor(canvas.height / 2);
+  const stripH = Math.floor(canvas.height * 0.15);
+  const startX = Math.floor(canvas.width * 0.1);
+  const endX   = Math.floor(canvas.width * 0.9);
+  const width  = endX - startX;
+
+  // Sample at 4 positions (body is ~80% of strip)
+  const bandPositions = [0.15, 0.32, 0.55, 0.82];
+  const sampledColors = bandPositions.map(pct => {
+    const x = startX + Math.floor(pct * width);
+    const data = ctx.getImageData(x, centerY - Math.floor(stripH/2), 1, stripH).data;
+    // Average pixels
+    let r=0,g=0,b=0,count=0;
+    for(let i=0;i<data.length;i+=4){r+=data[i];g+=data[i+1];b+=data[i+2];count++;}
+    return {r:Math.round(r/count), g:Math.round(g/count), b:Math.round(b/count)};
+  });
+
+  // Match each sampled color to nearest resistor color
+  const matched = sampledColors.map(rgb => nearestColor(rgb));
+
+  // Update SVG
+  ['cb1','cb2','cb3','cb-tol'].forEach((id,i)=>{
+    document.getElementById(id).setAttribute('fill', matched[i].hex);
+  });
+
+  // Try to compute value (3 digit bands + tol from last)
+  const d1 = matched[0].digit, d2 = matched[1].digit, mult = matched[2].mult;
+  let valText = '—';
+  if(d1!==null && d2!==null && mult!==undefined){
+    const val = (d1*10 + d2) * mult;
+    valText = fmtOhm(val);
+  }
+
+  document.getElementById('cam-result-text').textContent = valText;
+  document.getElementById('cam-result-detail').innerHTML =
+    `Banda 1: <strong>${matched[0].name}</strong><br>
+     Banda 2: <strong>${matched[1].name}</strong><br>
+     Multiplicador: <strong>${matched[2].name}</strong><br>
+     Tolerancia: <strong>${matched[3].name}</strong> (${matched[3].tol||'—'})<br>
+     <em style="color:var(--accent2);font-size:0.7rem;">⚠ Resultado estimado. Verifica visualmente las bandas.</em>`;
+  document.getElementById('cam-result').style.display = 'block';
+}
+
+function nearestColor({r,g,b}) {
+  let best = COLORS[0], bestDist = Infinity;
+  COLORS.forEach(c => {
+    const hr = parseInt(c.hex.slice(1,3),16);
+    const hg = parseInt(c.hex.slice(3,5),16);
+    const hb = parseInt(c.hex.slice(5,7),16);
+    const dist = (r-hr)**2 + (g-hg)**2 + (b-hb)**2;
+    if(dist < bestDist){ bestDist=dist; best=c; }
+  });
+  return best;
+}
+
+// ========== INIT ==========
+updateBandSelects();
+</script>
 </body>
 </html>
