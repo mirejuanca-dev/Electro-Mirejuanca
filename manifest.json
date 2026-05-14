@@ -1,12 +1,24 @@
-{
-    "negro": {"valor": 0, "hex": "#000000", "multiplicador": 1},
-    "marron": {"valor": 1, "hex": "#8B4513", "multiplicador": 10},
-    "rojo": {"valor": 2, "hex": "#FF0000", "multiplicador": 100},
-    "naranja": {"valor": 3, "hex": "#FFA500", "multiplicador": 1000},
-    "amarillo": {"valor": 4, "hex": "#FFFF00", "multiplicador": 10000},
-    "verde": {"valor": 5, "hex": "#008000", "multiplicador": 100000},
-    "azul": {"valor": 6, "hex": "#0000FF", "multiplicador": 1000000},
-    "violeta": {"valor": 7, "hex": "#EE82EE", "multiplicador": 10000000},
-    "gris": {"valor": 8, "hex": "#808080", "multiplicador": 100000000},
-    "blanco": {"valor": 9, "hex": "#FFFFFF", "multiplicador": 1000000000}
+
+  "name": "CalcuMirejuanca",
+  "short_name": "CalcuMirejuanca",
+  "description": "Calculadora Ley de Ohm y Código de Colores de Resistencias",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#00d4ff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
